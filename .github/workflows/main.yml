@@ -216,8 +216,6 @@ jobs:
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py createsuperuser \
               --username=Ilya \
               --email=igilmanov2005@gmail.com \
-              --noinput
+              --Ilya2005
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
             sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
-        env:
-          DJANGO_SUPERUSER_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
