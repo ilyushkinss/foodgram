@@ -5,7 +5,7 @@ from recipes.models.tag import Tag
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    """Страничка управления тегами в админке."""
+    """Управление тегами в админ-зоне."""
 
     list_display = ('name', 'slug')
     search_fields = ('name', 'slug')

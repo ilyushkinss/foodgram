@@ -12,12 +12,6 @@ from core.constants import (
 
 
 def object_update(*, serializer: Serializer) -> Response:
-    """
-    Функция для обновления данных из action.
-
-    Принимает в себя:
-    * serializer - готовый объект сериалайзера.
-    """
 
     serializer.is_valid(raise_exception=True)
     serializer.save()
@@ -32,16 +26,6 @@ def object_delete(
     error_mesage: str,
     model: Model
 ) -> Response:
-    """
-    Функция для удаления данных из action.
-
-    Принимает в себя:
-    * data - словарь данных для проверки в модели. Из данного словаря
-    также берутся данные по id для создания сериалайзера
-    * error_mesage - текст ошибки при удалении, если удаляемый элемент
-    отсутствует в БД
-    * model - модель данных
-    """
 
     instance = model.objects.filter(**data)
     if not instance.exists():

@@ -25,12 +25,7 @@ from recipes.models import (
 
 
 class RecipeSerializer(BaseRecipeSerializer):
-    """
-    Сериалайзер-основа рецептов.
-
-    Содержит дополнительные поля для сериалайзеров рецептов:
-    теги, ингредиенты, автор и описание.
-    """
+    """Сериализатор рецептов."""
     tags = TagSerializer(many=True)
     author = UserSerializer()
     ingredients = RecipeIngredientsGetSerializer(
@@ -39,8 +34,7 @@ class RecipeSerializer(BaseRecipeSerializer):
     )
 
     class Meta(BaseRecipeSerializer.Meta):
-        abstract = True  # Чтоб лишний раз не искать "где использую"
-        # Также хочу заметить, что в abstract.py не вынести, выйдет цикл
+        abstract = True
         fields = (
             *BaseRecipeSerializer.Meta.fields,
             'tags', 'ingredients', 'author', 'text'
@@ -48,7 +42,7 @@ class RecipeSerializer(BaseRecipeSerializer):
 
 
 class RecipeGetSerializer(RecipeSerializer):
-    """Сериалайзер рецептов для GET-методов и для ответов."""
+    """Сериализатор рецептов GET-запросов и для ответов."""
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
@@ -75,7 +69,7 @@ class RecipeGetSerializer(RecipeSerializer):
 
 
 class RecipeChangeSerializer(RecipeSerializer):
-    """Сериалайзер для изменения рецептов"""
+    """Сериализатор изменения рецептов"""
 
     tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all(),
@@ -94,13 +88,6 @@ class RecipeChangeSerializer(RecipeSerializer):
     class Meta(RecipeSerializer.Meta):
         read_only_fields = ('author', )
 
-    """
-    Сообщение ревьюверу:
-    Я пробовал делать через validate_<field>, но столкнулся с проблемой -
-    мне приходилось делать дополнительные проверки внутри update-метода.
-    https://gist.github.com/arefiture/bb78eac18e495ab6b8cec3db41c7d771
-    Мне такой подход не понравился
-    """
     def validate(self, data: OrderedDict):
         ingredients = data.get('recipe_ingredients')
         many_unique_with_minimum_one_validate(
@@ -119,9 +106,6 @@ class RecipeChangeSerializer(RecipeSerializer):
     def added_tags_ingredients(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            # У create метода первый - validated_data
-            # У update метода сначала instance, потом validated_data
-            # Т.е. для них последний эл - validated_data
             validated_data: dict = args[-1]
             ingredients: list[dict] = validated_data.pop('recipe_ingredients')
             tags = validated_data.pop('tags')

@@ -20,7 +20,6 @@ class Command(BaseCommand):
             'fields': ['name', 'slug'],
             'type': 'json'
         }
-        # Добавьте другие файлы, если нужно
     ]
     help = 'Загрузка данных из CSV и JSON файлов в указанные модели'
 
@@ -43,7 +42,6 @@ class Command(BaseCommand):
 
         file_type: str = kwargs['file_type'].lower()
 
-        # Определяем, какие типы файлов обрабатывать
         valid_file_types = {'csv', 'json', 'all'}
         if file_type not in valid_file_types:
             self.stderr.write(self.style.ERROR(
@@ -72,7 +70,6 @@ class Command(BaseCommand):
                     f'{model_name} ({type_name})'
                 ))
 
-                # Загружаем данные в зависимости от типа файла
                 if entry['type'] == 'csv':
                     self.load_csv(file_path, model, fields)
                 elif entry['type'] == 'json':

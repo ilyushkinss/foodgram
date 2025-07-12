@@ -5,7 +5,7 @@ from recipes.models import Ingredient, RecipeIngredients
 
 
 class RecipeIngredientsSetSerializer(serializers.ModelSerializer):
-    """Сериалайзер связующей рецепты+ингредиенты на запись."""
+    """Сериализатор связующий рецепты и ингредиенты на запись."""
 
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all()
@@ -21,7 +21,7 @@ class RecipeIngredientsSetSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientsGetSerializer(serializers.ModelSerializer):
-    """Сериалайзер связующей рецепты+ингредиенты на чтение."""
+    """Сериализатор связующий рецепты и ингредиенты на чтение."""
 
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')

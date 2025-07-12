@@ -15,7 +15,7 @@ const Technologies = () => {
       <h1 className={styles.title}>Технологии</h1>
       <div className={styles.content}>
         <div>
-          <h2 className={styles.subtitle}>Технологии, которые применены в этом проекте:</h2>
+          <h2 className={styles.subtitle}>Технологии, примененные в данном проекте:</h2>
           <div className={styles.text}>
             <ul className={styles.textItem}>
               <li className={styles.textItem}>
@@ -29,6 +29,18 @@ const Technologies = () => {
               </li>
               <li className={styles.textItem}>
                 Djoser
+              </li>
+              <li className={styles.textItem}>
+                Postgres
+              </li>
+              <li className={styles.textItem}>
+                Docker
+              </li>
+              <li className={styles.textItem}>
+                Nginx
+              </li>
+              <li className={styles.textItem}>
+                JavaScript
               </li>
             </ul>
           </div>

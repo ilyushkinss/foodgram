@@ -8,7 +8,7 @@ User = get_user_model()
 
 
 class IngredientFilter(filters.FilterSet):
-    """Фильтр по названию для ингредиентов."""
+    """Фильтр по названию ингредиентов."""
 
     name = filters.CharFilter(lookup_expr='istartswith')
 
@@ -18,15 +18,7 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-    """
-    Фильтр для рецептов.
-
-    Возможны:
-    * Фильтрация наличия в избранном по полю is_favorited
-    * Фильтрация наличия в корзине по полю is_in_shopping_cart
-    * Фильтрация принадлежности автору по полю author
-    * Фильтрация по тегам (tags)
-    """
+    """Фильтр рецептов."""
     is_favorited = filters.BooleanFilter(
         field_name='is_favorited',
         method='filter_is_favorited'

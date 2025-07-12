@@ -5,7 +5,7 @@ from recipes.models.ingredient import Ingredient
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    """Страничка управления ингредиентами в админке."""
+    """Управление ингредиентами в админ-зоне."""
 
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)

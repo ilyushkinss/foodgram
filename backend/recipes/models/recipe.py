@@ -23,7 +23,7 @@ User = get_user_model()
 
 
 class Recipe(CookbookBaseModel):
-    """Модель рецептов."""
+    """Модель рецепта."""
 
     tags = models.ManyToManyField(
         Tag, through='RecipeTags', verbose_name='Теги'

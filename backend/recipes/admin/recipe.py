@@ -47,7 +47,6 @@ class RecipeAdmin(admin.ModelAdmin):
     ordering = ('id',)
 
     def get_author_recipe(self, obj: Recipe):
-        # Создаем ссылку на редактирование автора рецепта
         url = reverse('admin:users_user_change', args=[obj.author.id])
         return format_html(
             '<a href="{}">{}</a>', url, obj.author.__str__()

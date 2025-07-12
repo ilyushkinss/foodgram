@@ -5,7 +5,7 @@ from recipes.models.base_models import CookbookBaseModel
 
 
 class Tag(CookbookBaseModel):
-    """Модель тегов."""
+    """Модель тега."""
 
     name = models.CharField(
         verbose_name='Наименование тега',

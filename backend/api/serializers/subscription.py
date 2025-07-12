@@ -11,7 +11,7 @@ from users.models import Subscription, User
 
 
 class SubscriptionGetSerializer(serializers.ModelSerializer):
-    """Сериалайзер для фолловеров. Только для чтения."""
+    """Сериализатор подписчиков. Только для чтения."""
 
     is_subscribed = serializers.SerializerMethodField(
         method_name='get_is_subscribed'
@@ -51,7 +51,7 @@ class SubscriptionGetSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionChangedSerializer(serializers.ModelSerializer):
-    """Сериалайзер для фолловеров. Только на запись."""
+    """Сериализатор подписчиков. Только на запись."""
 
     author_recipe = UserSerializer
     user = UserSerializer

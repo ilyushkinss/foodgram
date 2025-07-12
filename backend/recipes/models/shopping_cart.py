@@ -7,7 +7,7 @@ User = get_user_model()
 
 
 class ShoppingCart(BaseActionRecipeModel):
-    """Модель корзины покупок."""
+    """Модель корзины."""
 
     class Meta(BaseActionRecipeModel.Meta):
         constraints = [

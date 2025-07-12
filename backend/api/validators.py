@@ -4,12 +4,6 @@ from rest_framework.exceptions import ValidationError
 
 
 class SubscribeUniqueValidator:
-    """
-    Валидатор для сравнения подписчика и автора.
-
-    В случае если они равны вызывает исключение, т.к.
-    подпись на самого себя не имеет смысла.
-    """
 
     message = 'Невозможно подписаться на самого себя'
 

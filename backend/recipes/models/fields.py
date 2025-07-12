@@ -5,13 +5,6 @@ User = get_user_model()
 
 
 class UserForeignKey(models.ForeignKey):
-    """
-    FK-поле для пользователей.
-
-    По-умолчанию:
-    - to=User (модель берётся из get_user_model)
-    - on_delete=CASCADE
-    """
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('on_delete', models.CASCADE)

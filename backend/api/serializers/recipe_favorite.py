@@ -4,7 +4,7 @@ from recipes.models import RecipeFavorite
 
 
 class RecipeFavoriteSerializer(BaseRecipeActionSerializer):
-    """Сериалайзер избранных рецептов."""
+    """Сериализатор избранных рецептов."""
 
     class Meta(BaseRecipeActionSerializer.Meta):
         model = RecipeFavorite

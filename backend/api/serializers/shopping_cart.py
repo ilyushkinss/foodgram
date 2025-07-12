@@ -6,7 +6,7 @@ from recipes.models import RecipeIngredients, ShoppingCart
 
 
 class ShoppingCartSerializer(BaseRecipeActionSerializer):
-    """Сериалайзер корзины покупок."""
+    """Сериализатор корзины."""
 
     class Meta(BaseRecipeActionSerializer.Meta):
         model = ShoppingCart
@@ -14,7 +14,7 @@ class ShoppingCartSerializer(BaseRecipeActionSerializer):
 
 
 class DownloadShoppingCartSerializer(serializers.ModelSerializer):
-    """Сериалайзер для скачивания ингредиентов для покупки из корзины."""
+    """Сериализатор скачивания ингредиентов для покупки из корзины."""
 
     ingredients = serializers.SerializerMethodField()
 

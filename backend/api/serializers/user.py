@@ -5,7 +5,7 @@ from users.models import User
 
 
 class CurrentUserSerializer(DjoserUserSerializer):
-    """Сериалайзер под текущего пользователя (для /me)."""
+    """Сериализатор текущего пользователя."""
 
     is_subscribed = serializers.BooleanField(default=False, read_only=True)
 
@@ -23,7 +23,7 @@ class CurrentUserSerializer(DjoserUserSerializer):
 
 
 class UserSerializer(CurrentUserSerializer):
-    """Общий сериалайзер пользователя."""
+    """Общий Сериализатор пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
 

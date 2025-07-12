@@ -5,7 +5,7 @@ from recipes.models.base_models import CookbookBaseModel
 
 
 class Ingredient(CookbookBaseModel):
-    """Модель ингредиентов."""
+    """Модель ингредиента."""
 
     name = models.CharField(
         verbose_name='Наименование ингредиента',

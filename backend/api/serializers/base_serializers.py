@@ -1,9 +1,3 @@
-"""
-Для ревьювера: Я знаю, что у <ClassSerializer>.Meta нет
-атрибута abstract. Само слово abstract в данном случае
-несёт поясняющий характер, не более.
-"""
-
 import base64
 
 from django.core.files.base import ContentFile
@@ -16,7 +10,7 @@ from recipes.models.recipe import Recipe
 
 
 class Base64ImageField(serializers.ImageField):
-    """Сериалайзер под картинки. Преобразует входные данные в Base64."""
+    """Сериализатор для картинок. Конвертирует входные данные в Base64."""
 
     def to_internal_value(self, data: str):
         if isinstance(data, str) and data.startswith('data:image'):
@@ -29,22 +23,13 @@ class Base64ImageField(serializers.ImageField):
 
 
 class AvatarSerializer(serializers.Serializer):
-    """Сериалайзер под аватар."""
+    """Сериализатор для аватарки."""
 
     avatar = Base64ImageField(required=False)
 
 
 class BaseRecipeSerializer(serializers.ModelSerializer):
-    """
-    Базовый сериалайзер рецептов.
-
-    Содержит минимум необходимых полей для ответов на некоторые запросы.
-    В перечень полей входят:
-    - id
-    - name
-    - image
-    - cooking_time
-    """
+    """Базовый сериализатор рецептов."""
 
     image = Base64ImageField()
 
@@ -54,11 +39,7 @@ class BaseRecipeSerializer(serializers.ModelSerializer):
 
 
 class BaseRecipeActionSerializer(serializers.ModelSerializer):
-    """
-    Сериалайзер для добавления рецептов и авторов в связанные таблицы.
-
-    Используется при добавлении в корзину, в избранные.
-    """
+    """Сериализатор для добавления рецептов и авторов в связанные таблицы."""
 
     author = UserSerializer
     recipe = serializers.PrimaryKeyRelatedField(
@@ -66,7 +47,7 @@ class BaseRecipeActionSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = None  # Назначаем у дочерних классов
+        model = None
         fields = ('author', 'recipe')
         error_message = ''
 
