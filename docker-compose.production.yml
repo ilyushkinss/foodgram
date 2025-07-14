@@ -10,7 +10,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   backend:
-    image: ilyushkinss/food_backend
+    image: ilyushkinss/foodgram_backend
     env_file: .env
     volumes:
       - static:/backend_static/
@@ -18,13 +18,12 @@ services:
     depends_on:
       - db
   frontend:
-    image: ilyushkinss/food_frontend
-    env_file: .env
+    image: ilyushkinss/foodgram_frontend
     command: cp -r /app/build/. /static/
     volumes:
       - static:/static/
   gateway:
-    image: ilyushkinss/food_gateway
+    image: ilyushkinss/foodgram_gateway
     env_file: .env
     ports:
       - 8080:80
