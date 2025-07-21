@@ -58,7 +58,7 @@ def many_unique_with_minimum_one_validate(
         })
 
     if isinstance(data_list[0], OrderedDict):
-        data_set = {data.get('id') for data in data_list}
+        data_set = {data['id'] for data in data_list}
     else:
         data_set = {data.id for data in data_list}
 

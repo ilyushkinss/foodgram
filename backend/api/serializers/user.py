@@ -1,25 +1,15 @@
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
-from users.models import User
-
 
 class CurrentUserSerializer(DjoserUserSerializer):
     """Сериализатор текущего пользователя."""
 
     is_subscribed = serializers.BooleanField(default=False, read_only=True)
 
-    class Meta:
-        model = User
-        fields = (
-            'id',
-            'email',
-            'username',
-            'first_name',
-            'last_name',
-            'avatar',
-            'is_subscribed',
-        )
+    class Meta(DjoserUserSerializer.Meta):
+        # model = User
+        fields = DjoserUserSerializer.Meta.fields + ('is_subscribed',)
 
 
 class UserSerializer(CurrentUserSerializer):
@@ -29,7 +19,5 @@ class UserSerializer(CurrentUserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context['request']
-        user = request.user
-        if user.is_anonymous:
-            return False
-        return obj.authors.filter(user=user).exists()
+        return (request and request.user.is_authenticated and
+                obj.authors.filter(user=request.user).exists())

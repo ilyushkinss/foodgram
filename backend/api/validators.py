@@ -1,15 +1,11 @@
-from typing import Optional
-
 from rest_framework.exceptions import ValidationError
 
 
 class SubscribeUniqueValidator:
-
-    message = 'Невозможно подписаться на самого себя'
-
-    def __init__(self, fields: list, message: Optional[str] = None):
+    def __init__(self, fields: list,
+                 message: str = 'Невозможно подписаться на самого себя'):
         self.fields = fields
-        self.message = message or self.message
+        self.message = message
 
     def __call__(self, attrs: dict):
         user = attrs.get('user')
@@ -19,28 +15,19 @@ class SubscribeUniqueValidator:
             raise ValidationError(self.message)
 
 
-class UniqueDataInManyFieldValidator:
-    """Валидатор на уникальность сложных полей."""
+# validators.py
+from django.core.exceptions import ValidationError
+from collections import OrderedDict
 
-    def __init__(
-        self, *, field: str, message: str,
-        is_dict: bool = False, key: Optional[str] = None
-    ):
-        self.field = field
-        self.message = message
-        self.is_dict = is_dict
-        if is_dict:
-            if not key:
-                raise ValueError(
-                    {'message': 'Требуется передать поле key для поиска'}
-                )
-            self.search_field = key
 
-    def __call__(self, value):
-        data_list = value.get(self.field)
-        data_set = {
-            field.get(self.search_field) if self.is_dict else field
-            for field in data_list
-        }
-        if len(data_list) != len(data_set):
-            raise ValidationError(self.message)
+def validate_min_one_unique(items: list, field_name: str, name_forms: tuple):
+    """Общий валидатор для проверки минимум одного уникального элемента."""
+    if not items:
+        raise ValidationError({
+            field_name: f"Должен быть указан хотя бы один {name_forms[0]}."
+        })
+
+    if len(items) != len(set(item.id for item in items)):
+        raise ValidationError({
+            field_name: f"{name_forms[1]} должны быть уникальными."
+        })

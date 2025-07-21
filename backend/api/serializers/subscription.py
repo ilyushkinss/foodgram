@@ -10,12 +10,9 @@ from api.validators import SubscribeUniqueValidator
 from users.models import Subscription, User
 
 
-class SubscriptionGetSerializer(serializers.ModelSerializer):
+class SubscriptionGetSerializer(UserSerializer):
     """Сериализатор подписчиков. Только для чтения."""
 
-    is_subscribed = serializers.SerializerMethodField(
-        method_name='get_is_subscribed'
-    )
     recipes = serializers.SerializerMethodField(
         method_name='get_recipes'
     )
@@ -23,26 +20,17 @@ class SubscriptionGetSerializer(serializers.ModelSerializer):
         source='recipes.count'
     )
 
-    class Meta:
+    class Meta(UserSerializer.Meta):
         model = User
-        fields = (
-            'email', 'id', 'username', 'first_name', 'last_name',
-            'is_subscribed', 'recipes', 'recipes_count', 'avatar'
-        )
+        fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
         read_only_fields = fields
 
-    def get_is_subscribed(self, obj: User):
-        request: Request = self.context['request']
-        if request.user.is_anonymous:
-            return False
-        return obj.authors.filter(user=request.user).exists()
-
     def get_recipes(self, obj: User):
-        request: Request = self.context.get('request')
-        recipes_limit: int = (
+        request: Request = self.context['request']
+        recipes_limit = (int(
             request.GET.get('recipes_limit') if request
             else settings.RECIPES_LIMIT_MAX
-        )
+        ))
         queryset: QuerySet = obj.recipes.all()
         if recipes_limit:
             queryset = queryset[:int(recipes_limit)]
@@ -52,9 +40,6 @@ class SubscriptionGetSerializer(serializers.ModelSerializer):
 
 class SubscriptionChangedSerializer(serializers.ModelSerializer):
     """Сериализатор подписчиков. Только на запись."""
-
-    author_recipe = UserSerializer
-    user = UserSerializer
 
     class Meta:
         model = Subscription

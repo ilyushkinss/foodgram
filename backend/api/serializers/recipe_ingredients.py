@@ -8,11 +8,19 @@ class RecipeIngredientsSetSerializer(serializers.ModelSerializer):
     """Сериализатор связующий рецепты и ингредиенты на запись."""
 
     id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all()
+        queryset=Ingredient.objects.all(),
+        error_messages={
+            'does_not_exist': 'Ингредиент с id={pk_value} не существует.',
+            'incorrect_type': 'Некорректный тип данных для id ингредиента.'
+        }
     )
     amount = serializers.IntegerField(
         max_value=MAX_INTEGER_VALUE,
-        min_value=MIN_INTEGER_VALUE
+        min_value=MIN_INTEGER_VALUE,
+        error_messages={
+            'min_value': f'Количество ингредиента не может быть меньше {MIN_INTEGER_VALUE}.',
+            'max_value': f'Количество ингредиента не может превышать {MAX_INTEGER_VALUE}.',
+        }
     )
 
     class Meta:
