@@ -80,26 +80,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
 
-  # frontend_tests:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - name: Set up nodeJS
-  #     uses: actions/setup-node@v3
-  #     with:
-  #       node-version: 18
-
-  #   - name: Install dependencies
-  #     run: |
-  #       cd frontend/
-  #       npm ci
-
-  #   - name: Test frontend
-  #     run: |
-  #       cd frontend/
-  #       npm run test
-
   build_frontend_and_push_to_docker_hub:
     if: ${{ github.ref == 'refs/heads/main' }}
     name: Push frontend Docker image to DockerHub
@@ -162,6 +142,24 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           source: "docker-compose.production.yml"
           target: "foodgram"
+#      - name: Executing remote ssh commands to deploy
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.HOST }}
+#          username: ${{ secrets.USER }}
+#          key: ${{ secrets.SSH_KEY }}
+#          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+#          script: |
+#            cd foodgram
+#            sudo docker compose -f docker-compose.production.yml pull
+#            sudo docker compose -f docker-compose.production.yml down
+#            sudo docker compose -f docker-compose.production.yml up -d
+#            for i in {1..5}; do
+#              sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate && break || sleep 5
+#            done
+#            sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+#            sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+#            sudo docker compose -f docker-compose.production.yml exec backend python manage.py data_loader
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
@@ -173,11 +171,11 @@ jobs:
             cd foodgram
             sudo docker compose -f docker-compose.production.yml pull
             sudo docker compose -f docker-compose.production.yml down
-            sudo docker compose -f docker-compose.production.yml up -d
-            for i in {1..5}; do
-              sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate && break || sleep 5
-            done
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+            sudo docker compose -f docker-compose.production.yml up -d --wait db
+            echo "Waiting for database to be ready..."
+            sleep 10
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input
             sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py data_loader
 
