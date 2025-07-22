@@ -133,6 +133,9 @@ class RecipeChangeSerializer(RecipeSerializer):
             'max_value': f'Время приготовления не может превышать {MAX_INTEGER_VALUE} минут.',
         }
     )
+    title = serializers.CharField(required=True)
+
+    text = serializers.CharField(required=True)
 
     class Meta(RecipeSerializer.Meta):
         fields = RecipeSerializer.Meta.fields + ('ingredients',)

@@ -50,17 +50,6 @@ class RecipeViewSet(
     def perform_create(self, serializer: Serializer):
         serializer.save(author=self.request.user)
 
-    def partial_update(self, request: Request, *args, **kwargs):
-        instance: Recipe = self.get_object()
-        data = request.data.copy()
-
-        serializer: Serializer = self.get_serializer(
-            instance, data=data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        super().perform_update(serializer)
-        return Response(serializer.data)
-
     @action(detail=True, methods=['GET'], url_path='get-link')
     def get_short_link(self, request: Request, pk: int):
         try:
