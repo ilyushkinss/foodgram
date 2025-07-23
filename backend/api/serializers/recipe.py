@@ -133,12 +133,19 @@ class RecipeChangeSerializer(RecipeSerializer):
             'max_value': f'Время приготовления не может превышать {MAX_INTEGER_VALUE} минут.',
         }
     )
-    title = serializers.CharField(required=True)
+    name = serializers.CharField(required=True)
 
     text = serializers.CharField(required=True)
 
     class Meta(RecipeSerializer.Meta):
-        fields = RecipeSerializer.Meta.fields + ('ingredients',)
+        fields = RecipeSerializer.Meta.fields + (
+            'ingredients',
+            'name',
+            'text',
+            'cooking_time',
+            'author',
+            'tags'
+        )
 
     def validate(self, data):
         ingredients = data.get('recipe_ingredients', [])

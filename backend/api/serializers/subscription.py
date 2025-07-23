@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.conf import settings
 from django.db.models.query import QuerySet
 from rest_framework import serializers
@@ -26,14 +28,19 @@ class SubscriptionGetSerializer(UserSerializer):
         read_only_fields = fields
 
     def get_recipes(self, obj: User):
-        request: Request = self.context['request']
-        recipes_limit = (int(
-            request.GET.get('recipes_limit') if request
-            else settings.RECIPES_LIMIT_MAX
-        ))
+        request: Request = self.context.get('request')
+
+        recipes_limit: Optional[int] = None
+        if request:
+            try:
+                recipes_limit = int(request.GET.get('recipes_limit', ''))
+            except (ValueError, TypeError):
+                recipes_limit = settings.RECIPES_LIMIT_MAX
+
         queryset: QuerySet = obj.recipes.all()
-        if recipes_limit:
-            queryset = queryset[:int(recipes_limit)]
+        if recipes_limit is not None:
+            queryset = queryset[:recipes_limit]
+
         serializer = BaseRecipeSerializer
         return serializer(queryset, many=True).data
 
