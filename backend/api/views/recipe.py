@@ -101,18 +101,16 @@ class RecipeViewSet(
         now = datetime.now()
         formatted_time = now.strftime('%d-%m-%Y_%H_%M_%S')
 
-        response = HttpResponse(content_type='text/csv; charset=cp1251')
-        filename = f'shopping_cart.csv_{request.user.id}_{formatted_time}'
-        response['Content-Disposition'] = (
-            f'attachment; filename="{filename}"'
-        )
+        # Используем UTF-8 с BOM для правильного отображения в Excel
+        response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+        filename = f'shopping_cart_{request.user.id}_{formatted_time}.csv'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
-        csv_buffer = io.TextIOWrapper(response, encoding='cp1251', newline='')
-        writer = csv.writer(csv_buffer)
+        writer = csv.writer(response)
         writer.writerow(['Ингредиент', 'Единица измерения', 'Количество'])
+
         if serializer.data:
             ingredients = serializer.data[0]['ingredients']
-
             rows = [
                 [
                     ingredient['name'],
@@ -122,7 +120,6 @@ class RecipeViewSet(
             ]
             writer.writerows(rows)
 
-        csv_buffer.flush()  # Сбрасываем буфер, чтобы данные записались
         return response
 
 
