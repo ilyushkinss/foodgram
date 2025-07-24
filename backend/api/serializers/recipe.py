@@ -88,9 +88,9 @@ class RecipeChangeSerializer(RecipeSerializer):
         min_value=MIN_INTEGER_VALUE,
         error_messages={
             'min_value':
-                f'Время приготовления не может быть меньше {MIN_INTEGER_VALUE} минут.',
+                f'Минимальное время приготовления - {MIN_INTEGER_VALUE} мин.',
             'max_value':
-                f'Время приготовления не может превышать {MAX_INTEGER_VALUE} минут.',
+                f'Максимальное время приготовления - {MAX_INTEGER_VALUE} мин.',
         }
     )
     name = serializers.CharField(required=True)

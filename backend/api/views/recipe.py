@@ -22,9 +22,8 @@ from recipes.models import Recipe, ShoppingCart
 from api.utils import object_delete, object_update
 
 
-class RecipeViewSet(
-    viewsets.ModelViewSet,
-    RecipeFavoriteMixin):
+class RecipeViewSet(viewsets.ModelViewSet,
+                    RecipeFavoriteMixin):
     """Вьюсет для рецептов и связных с /recipes/ действий."""
 
     queryset = Recipe.objects.all()

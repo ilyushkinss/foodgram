@@ -19,9 +19,9 @@ class RecipeIngredientsSetSerializer(serializers.ModelSerializer):
         min_value=MIN_INTEGER_VALUE,
         error_messages={
             'min_value':
-                f'Количество ингредиента не может быть меньше {MIN_INTEGER_VALUE}.',
+                f'Минимальное количество ингредиента - {MIN_INTEGER_VALUE}.',
             'max_value':
-                f'Количество ингредиента не может превышать {MAX_INTEGER_VALUE}.',
+                f'Максимальное количество ингредиента - {MAX_INTEGER_VALUE}.',
         }
     )
 

@@ -8,7 +8,8 @@ from django.shortcuts import get_object_or_404
 
 from api.permissions import ReadOnly
 from api.serializers import (AvatarSerializer, UserSerializer,
-                             SubscriptionGetSerializer, SubscriptionChangedSerializer)
+                             SubscriptionGetSerializer,
+                             SubscriptionChangedSerializer)
 from users.models import User, Subscription
 from ..utils import object_delete, object_update
 
