@@ -1,5 +1,4 @@
 import csv
-import io
 from datetime import datetime
 from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpResponse
@@ -14,8 +13,10 @@ from rest_framework.views import APIView
 
 from api.filters import RecipeFilter
 from api.permissions import IsAuthorOrReadOnly, ReadOnly
-from api.serializers import (RecipeChangeSerializer, RecipeGetSerializer,
-                             DownloadShoppingCartSerializer, ShoppingCartSerializer)
+from api.serializers import (RecipeChangeSerializer,
+                             RecipeGetSerializer,
+                             DownloadShoppingCartSerializer,
+                             ShoppingCartSerializer)
 from api.views.recipe_favorite import RecipeFavoriteMixin
 from recipes.models import Recipe, ShoppingCart
 from api.utils import object_delete, object_update
@@ -32,7 +33,7 @@ class RecipeViewSet(
     filterset_class = RecipeFilter
     serializer_class = RecipeChangeSerializer
     ordering = ['-id']
-    http_method_names =['get', 'post', 'put', 'patch', 'delete']
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete']
     search_fields = ['title', 'tag']
 
     def get_permissions(self):

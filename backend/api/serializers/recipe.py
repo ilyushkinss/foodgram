@@ -65,48 +65,6 @@ class RecipeGetSerializer(RecipeSerializer):
         return self.get_is_exists(obj, ShoppingCart)
 
 
-# class RecipeGetSerializer(RecipeSerializer):
-#     """Сериализатор рецептов GET-запросов и для ответов."""
-#     tags = TagSerializer(many=True, read_only=True)
-#     author = UserSerializer(read_only=True)
-#     ingredients = RecipeIngredientsGetSerializer(
-#         many=True,
-#         source='recipe_ingredients',
-#         read_only=True
-#     )
-#     is_favorited = serializers.BooleanField(default=False, read_only=True)
-#     is_in_shopping_cart = serializers.BooleanField(default=False, read_only=True)
-#
-#     class Meta(RecipeSerializer.Meta):
-#         fields = (
-#             *RecipeSerializer.Meta.fields,
-#             'is_favorited', 'is_in_shopping_cart'
-#         )
-#
-#     @classmethod
-#     def setup_eager_loading(cls, queryset, request=None):
-#         """
-#         Аннотирует queryset полями is_favorited и is_in_shopping_cart.
-#         Должен вызываться до создания сериализатора.
-#         """
-#         if request and request.user.is_authenticated:
-#             queryset = queryset.annotate(
-#                 is_favorited=Exists(
-#                     RecipeFavorite.objects.filter(
-#                         author=request.user,
-#                         recipe=OuterRef('pk')
-#                     )
-#                 ),
-#                 is_in_shopping_cart=Exists(
-#                     ShoppingCart.objects.filter(
-#                         author=request.user,
-#                         recipe=OuterRef('pk')
-#                     )
-#                 )
-#             )
-#         return queryset
-
-
 class RecipeChangeSerializer(RecipeSerializer):
     """Сериализатор изменения рецептов"""
 
@@ -129,8 +87,10 @@ class RecipeChangeSerializer(RecipeSerializer):
         max_value=MAX_INTEGER_VALUE,
         min_value=MIN_INTEGER_VALUE,
         error_messages={
-            'min_value': f'Время приготовления не может быть меньше {MIN_INTEGER_VALUE} минут.',
-            'max_value': f'Время приготовления не может превышать {MAX_INTEGER_VALUE} минут.',
+            'min_value':
+                f'Время приготовления не может быть меньше {MIN_INTEGER_VALUE} минут.',
+            'max_value':
+                f'Время приготовления не может превышать {MAX_INTEGER_VALUE} минут.',
         }
     )
     name = serializers.CharField(required=True)
@@ -236,4 +196,3 @@ class RecipeChangeSerializer(RecipeSerializer):
 
     def to_representation(self, instance):
         return RecipeGetSerializer(instance, context=self.context).data
-

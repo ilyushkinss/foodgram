@@ -1,4 +1,5 @@
 from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 
 
 class SubscribeUniqueValidator:
@@ -13,11 +14,6 @@ class SubscribeUniqueValidator:
 
         if user == author_recipe:
             raise ValidationError(self.message)
-
-
-# validators.py
-from django.core.exceptions import ValidationError
-from collections import OrderedDict
 
 
 def validate_min_one_unique(items: list, field_name: str, name_forms: tuple):

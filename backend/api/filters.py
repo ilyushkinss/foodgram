@@ -38,26 +38,15 @@ class RecipeFilter(filters.FilterSet):
         model = Recipe
         fields = ('author', 'tags')
 
-    # def filter_or_exclude_author(
-    #     self, queryset: QuerySet, name: str, value: bool, filter_field: str
-    # ) -> QuerySet:
-    #     author = self.request.user
-    #     if value and author.is_authenticated:
-    #         return queryset.filter(**{filter_field: author}).distinct()
-    #     elif not value and author.is_authenticated:
-    #         return queryset.exclude(**{filter_field: author})
-    #     elif not value and author.is_anonymous:
-    #         return queryset.all()
-    #     return queryset.none()
     def filter_or_exclude_author(
             self, queryset: QuerySet, name: str, value: bool, filter_field: str
     ) -> QuerySet:
         if not hasattr(self, "request") or not hasattr(self.request, "user"):
-            return queryset.none()  # или queryset.all(), если хотим игнорировать
+            return queryset.none()
 
         author = self.request.user
         if not author.is_authenticated:
-            return queryset.all()  # или queryset.none(), если анонимов нужно исключать
+            return queryset.all()
 
         if value:
             return queryset.filter(**{filter_field: author}).distinct()
