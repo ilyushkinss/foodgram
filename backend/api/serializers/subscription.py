@@ -1,9 +1,5 @@
-from typing import Optional
-
 from django.conf import settings
-from django.db.models.query import QuerySet
 from rest_framework import serializers
-from rest_framework.request import Request
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.serializers.base_serializers import BaseRecipeSerializer

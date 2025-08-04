@@ -124,7 +124,9 @@ class RecipeChangeSerializer(RecipeSerializer):
 
         ingredient_ids = [ingredient['id'].id for ingredient in ingredients]
         if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise serializers.ValidationError('Ингредиенты должны быть уникальными.')
+            raise serializers.ValidationError(
+                'Ингредиенты должны быть уникальными.'
+            )
         return ingredients
 
     def _create_recipe_ingredients(self, recipe, ingredients_data):
