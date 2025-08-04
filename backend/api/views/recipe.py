@@ -69,13 +69,6 @@ class RecipeViewSet(viewsets.ModelViewSet,
             self.permission_classes = [IsAuthenticated]
         return super().get_permissions()
 
-    def get_serializer_class(self):
-        if self.action in SAFE_METHODS:
-            return RecipeGetSerializer
-        if self.action in ['create', 'update', 'partial_update']:
-            return RecipeChangeSerializer
-        return super().get_serializer_class()
-
     def perform_create(self, serializer: Serializer):
         serializer.save(author=self.request.user)
 
@@ -111,14 +104,6 @@ class RecipeViewSet(viewsets.ModelViewSet,
             context={'request': request}
         )
         return self.object_update(serializer=serializer)
-
-    @post_favorite.mapping.delete
-    def delete_favorite(self, request: Request, pk: int):
-        return self.object_delete(
-            data=self.get_data(request=request, pk=pk),
-            error_message='У вас нет данного рецепта в избранном.',
-            model=RecipeFavorite
-        )
 
     def get_favorite_data(self, request: Request, pk: int) -> dict:
         """Общая часть для получения данных favorite."""
