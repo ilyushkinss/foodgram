@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
@@ -16,7 +16,6 @@ from rest_framework.views import APIView
 from api.filters import RecipeFilter
 from api.permissions import IsAuthorOrReadOnly, ReadOnly
 from api.serializers import (RecipeChangeSerializer,
-                             RecipeGetSerializer,
                              DownloadShoppingCartSerializer,
                              ShoppingCartSerializer,
                              RecipeFavoriteSerializer)
@@ -95,15 +94,6 @@ class RecipeViewSet(viewsets.ModelViewSet,
             'author': request.user,
             'recipe': get_object_or_404(Recipe, id=pk)
         }
-
-    @action(detail=True, methods=['POST'], url_path='favorite')
-    def post_favorite(self, request: Request, pk: int):
-        data: dict = self.get_data(request=request, pk=pk)
-        serializer = RecipeFavoriteSerializer(
-            data={key: obj.id for key, obj in data.items()},
-            context={'request': request}
-        )
-        return self.object_update(serializer=serializer)
 
     def get_favorite_data(self, request: Request, pk: int) -> dict:
         """Общая часть для получения данных favorite."""

@@ -44,7 +44,7 @@ class RecipeFilter(filters.FilterSet):
             return queryset
 
         if (not getattr(self.request, 'user', None)
-            or not self.request.user.is_authenticated):
+                or not self.request.user.is_authenticated):
             return queryset.none()
 
         return queryset.filter(**{filter_field: self.request.user}).distinct()
