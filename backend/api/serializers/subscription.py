@@ -28,16 +28,16 @@ class SubscriptionGetSerializer(UserSerializer):
         read_only_fields = fields
 
     def get_recipes(self, obj: User):
-        request: Request = self.context.get('request')
+        request = self.context.get('request')
 
-        recipes_limit: Optional[int] = None
-        if request:
+        recipes_limit = None
+        if request is not None:
             try:
                 recipes_limit = int(request.GET.get('recipes_limit', ''))
             except (ValueError, TypeError):
                 recipes_limit = settings.RECIPES_LIMIT_MAX
 
-        queryset: QuerySet = obj.recipes.all()
+        queryset = obj.recipes.all()
         if recipes_limit is not None:
             queryset = queryset[:recipes_limit]
 

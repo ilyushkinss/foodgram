@@ -6,7 +6,8 @@ from rest_framework.request import Request
 
 from api.serializers.base_serializers import BaseRecipeSerializer
 from api.serializers.recipe_ingredients import (
-    RecipeIngredientsGetSerializer
+    RecipeIngredientsGetSerializer,
+    RecipeIngredientsSetSerializer
 )
 from api.serializers.tag import TagSerializer
 from api.serializers.user import UserSerializer
@@ -28,7 +29,7 @@ class RecipeSerializer(BaseRecipeSerializer):
             *BaseRecipeSerializer.Meta.fields,
             'tags', 'ingredients', 'author', 'text'
         )
-        read_only_fields = fields
+        read_only_fields = ('author',)
 
 
 class RecipeGetSerializer(RecipeSerializer):
@@ -38,10 +39,10 @@ class RecipeGetSerializer(RecipeSerializer):
     ingredients = RecipeIngredientsGetSerializer(
         many=True,
         source='recipe_ingredients',
-        read_only=True
+        read_only=True,
     )
-    is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
+    is_favorited = serializers.BooleanField(default=False)
+    is_in_shopping_cart = serializers.BooleanField(default=False)
 
     class Meta(RecipeSerializer.Meta):
         fields = (
@@ -72,16 +73,20 @@ class RecipeChangeSerializer(RecipeSerializer):
         many=True,
         queryset=Tag.objects.all(),
         required=True,
+        error_messages={
+            'does_not_exist':
+                'Тега с id={pk_value} не существует.'
+        }
     )
     author = UserSerializer(
         default=serializers.CurrentUserDefault(),
-        read_only=True
+        read_only=True,
     )
-    ingredients = serializers.ListField(
-        child=serializers.DictField(),
+    ingredients = RecipeIngredientsSetSerializer(
+        many=True,
         source='recipe_ingredients',
         required=True,
-        write_only=True
+        write_only=True,
     )
     cooking_time = serializers.IntegerField(
         max_value=MAX_INTEGER_VALUE,
@@ -93,9 +98,6 @@ class RecipeChangeSerializer(RecipeSerializer):
                 f'Максимальное время приготовления - {MAX_INTEGER_VALUE} мин.',
         }
     )
-    name = serializers.CharField(required=True)
-
-    text = serializers.CharField(required=True)
 
     class Meta(RecipeSerializer.Meta):
         fields = RecipeSerializer.Meta.fields + (
@@ -107,90 +109,62 @@ class RecipeChangeSerializer(RecipeSerializer):
             'tags'
         )
 
-    def validate(self, data):
-        ingredients = data.get('recipe_ingredients', [])
-        tags = data.get('tags', [])
-
-        # Валидация ингредиентов
-        if not ingredients:
-            raise serializers.ValidationError(
-                {'ingredients': 'Необходимо указать хотя бы один ингредиент.'}
-            )
-
-        seen_ingredients = set()
-        for ing in ingredients:
-            ingredient_id = self._get_ingredient_id(ing)
-            if ingredient_id in seen_ingredients:
-                raise serializers.ValidationError(
-                    {'ingredients': 'Ингредиенты должны быть уникальными.'}
-                )
-            seen_ingredients.add(ingredient_id)
-
-        # Валидация тегов
+    def validate_tags(self, tags):
         if not tags:
             raise serializers.ValidationError(
-                {'tags': 'Необходимо указать хотя бы один тег.'}
+                'Необходимо указать хотя бы один тег.'
             )
+        return tags
 
-        return data
-
-    def _get_ingredient_id(self, ingredient_data):
-        """Универсальное получение ID ингредиента из разных форматов данных"""
-        if isinstance(ingredient_data.get('ingredient'), dict):
-            return ingredient_data['ingredient']['id']
-        elif isinstance(ingredient_data.get('ingredient'), (int, str)):
-            return int(ingredient_data['ingredient'])
-        elif 'id' in ingredient_data:
-            return ingredient_data['id']
-        else:
+    def validate_ingredients(self, ingredients):
+        if not ingredients:
             raise serializers.ValidationError(
-                {'ingredients': 'Неверный формат данных ингредиента.'}
+                'Необходимо указать хотя бы один ингредиент.'
             )
 
-    def _get_ingredient_amount(self, ingredient_data):
-        """Получение количества ингредиента"""
-        try:
-            return int(ingredient_data['amount'])
-        except (KeyError, ValueError):
-            raise serializers.ValidationError(
-                {'amount': 'Необходимо указать количество ингредиента.'}
+        ingredient_ids = [ingredient['id'].id for ingredient in ingredients]
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            raise serializers.ValidationError('Ингредиенты должны быть уникальными.')
+        return ingredients
+
+    def _create_recipe_ingredients(self, recipe, ingredients_data):
+        """Создает все ингредиенты рецепта одним запросом"""
+        recipe_ingredients = [
+            RecipeIngredients(
+                recipe=recipe,
+                ingredient=ingredient_data['id'],
+                amount=ingredient_data['amount']
             )
+            for ingredient_data in ingredients_data
+        ]
+        RecipeIngredients.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('recipe_ingredients')
         tags_data = validated_data.pop('tags')
 
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = super().create(validated_data)
+
         recipe.tags.set(tags_data)
 
-        for ingredient_data in ingredients_data:
-            RecipeIngredients.objects.create(
-                recipe=recipe,
-                ingredient_id=self._get_ingredient_id(ingredient_data),
-                amount=self._get_ingredient_amount(ingredient_data)
-            )
+        self._create_recipe_ingredients(recipe, ingredients_data)
 
         return recipe
 
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop('recipe_ingredients', None)
-        tags_data = validated_data.pop('tags', None)
+        ingredients_data = validated_data.pop('recipe_ingredients')
+        tags_data = validated_data.pop('tags')
 
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
+        instance = super().update(instance, validated_data)
+        instance.tags.set(tags_data)
 
-        if tags_data is not None:
-            instance.tags.set(tags_data)
-
-        if ingredients_data is not None:
-            instance.recipe_ingredients.all().delete()
-            for ingredient_data in ingredients_data:
-                RecipeIngredients.objects.create(
-                    recipe=instance,
-                    ingredient_id=self._get_ingredient_id(ingredient_data),
-                    amount=self._get_ingredient_amount(ingredient_data)
-                )
+        instance.recipe_ingredients.all().delete()
+        for ingredient_data in ingredients_data:
+            RecipeIngredients.objects.create(
+                recipe=instance,
+                ingredient=ingredient_data['id'],
+                amount=ingredient_data['amount']
+            )
 
         return instance
 

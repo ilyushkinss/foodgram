@@ -23,14 +23,14 @@ def object_update(*, serializer: Serializer) -> Response:
 def object_delete(
     *,
     data: dict[str: object],
-    error_mesage: str,
+    error_message: str,
     model: Model
 ) -> Response:
 
     instance = model.objects.filter(**data)
     if not instance.exists():
         return Response(
-            {'errors': error_mesage},
+            {'errors': error_message},
             status=status.HTTP_400_BAD_REQUEST
         )
     instance.delete()
@@ -40,15 +40,6 @@ def object_delete(
 def many_unique_with_minimum_one_validate(
     data_list: list, field_name: str, singular: str, plural: str
 ) -> None:
-    """
-    Валидация many-полей на их наличие и уникальность.
-
-    Функция может работать как с [model.objects], так и с [OrderedDict()].
-    * data_list - валидируемые данные (список, т.к. many=True)
-    * field_name - наименование поля валидации для его указания в ошибке
-    * singular - наименование в единственном числе на русском
-    * plural - наименование во множественном числе на русском
-    """
 
     if not data_list:
         raise ValidationError({

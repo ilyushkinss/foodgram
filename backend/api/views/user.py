@@ -11,10 +11,11 @@ from api.serializers import (AvatarSerializer, UserSerializer,
                              SubscriptionGetSerializer,
                              SubscriptionChangedSerializer)
 from users.models import User, Subscription
-from ..utils import object_delete, object_update
+from core.mixins import ObjectCRUDMixin
 
 
-class UserViewSet(djoser_views.UserViewSet):
+class UserViewSet(djoser_views.UserViewSet,
+                  ObjectCRUDMixin,):
     """Вьюсет пользователей."""
 
     queryset = User.objects.all()
@@ -62,13 +63,13 @@ class UserViewSet(djoser_views.UserViewSet):
             data={key: obj.id for key, obj in data.items()},
             context={'request': request}
         )
-        return object_update(serializer=serializer)
+        return self.object_update(serializer=serializer)
 
     @post_subscribe.mapping.delete
     def delete_subscribe(self, request: Request, id: int):
-        return object_delete(
+        return self.object_delete(
             data=self.get_data(request=request, id=id),
-            error_mesage='У вас нет данного пользователя в подписчиках.',
+            error_message='У вас нет данного пользователя в подписчиках.',
             model=Subscription
         )
 
@@ -105,9 +106,6 @@ class UserViewSet(djoser_views.UserViewSet):
         user = self.request.user
         if user.avatar:
             user.avatar.delete()
-            # На мой взгляд, две следующие строки необходимы, ведь иначе
-            # поле avatar в бд осанется со ссылкой на несуществующий файл
-            # и при следующем обращении выдаст ошибку.
             user.avatar = None
             user.save()
         return response.Response(status=status.HTTP_204_NO_CONTENT)

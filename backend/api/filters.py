@@ -1,34 +1,35 @@
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
-from django_filters import rest_framework as filters
+from django_filters import rest_framework as filter
+from rest_framework import filters
 
 from recipes.models import Ingredient, Recipe, Tag
 
 User = get_user_model()
 
 
-class IngredientFilter(filters.FilterSet):
+class IngredientFilter(filters.SearchFilter):
     """Фильтр по названию ингредиентов."""
 
-    name = filters.CharFilter(lookup_expr='istartswith')
+    name = filter.CharFilter(lookup_expr='istartswith')
 
     class Meta:
         model = Ingredient
         fields = ['name']
 
 
-class RecipeFilter(filters.FilterSet):
+class RecipeFilter(filter.FilterSet):
     """Фильтр рецептов."""
-    is_favorited = filters.BooleanFilter(
+    is_favorited = filter.BooleanFilter(
         field_name='is_favorited',
         method='filter_is_favorited'
     )
-    is_in_shopping_cart = filters.BooleanFilter(
+    is_in_shopping_cart = filter.BooleanFilter(
         field_name='is_in_shopping_cart',
         method='filter_is_in_shopping_cart'
     )
-    author = filters.ModelChoiceFilter(queryset=User.objects.all())
-    tags = filters.ModelMultipleChoiceFilter(
+    author = filter.ModelChoiceFilter(queryset=User.objects.all())
+    tags = filter.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         queryset=Tag.objects.all(),
         to_field_name='slug',
@@ -41,16 +42,13 @@ class RecipeFilter(filters.FilterSet):
     def filter_or_exclude_author(
             self, queryset: QuerySet, name: str, value: bool, filter_field: str
     ) -> QuerySet:
-        if not hasattr(self, "request") or not hasattr(self.request, "user"):
+        if not value:
+            return queryset
+
+        if not getattr(self.request, 'user', None) or not self.request.user.is_authenticated:
             return queryset.none()
 
-        author = self.request.user
-        if not author.is_authenticated:
-            return queryset.all()
-
-        if value:
-            return queryset.filter(**{filter_field: author}).distinct()
-        return queryset.exclude(**{filter_field: author})
+        return queryset.filter(**{filter_field: self.request.user}).distinct()
 
     def filter_is_favorited(
         self, queryset: QuerySet, name: str, value: bool

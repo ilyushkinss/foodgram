@@ -8,8 +8,7 @@ class CurrentUserSerializer(DjoserUserSerializer):
     is_subscribed = serializers.BooleanField(default=False, read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
-        # model = User
-        fields = DjoserUserSerializer.Meta.fields + ('is_subscribed',)
+        fields = DjoserUserSerializer.Meta.fields + ('is_subscribed', 'avatar')
 
 
 class UserSerializer(CurrentUserSerializer):

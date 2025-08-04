@@ -1,6 +1,8 @@
 import csv
 from datetime import datetime
+
 from django.shortcuts import get_object_or_404, redirect
+from django.db.models import Exists, OuterRef, Value, BooleanField
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -16,14 +18,14 @@ from api.permissions import IsAuthorOrReadOnly, ReadOnly
 from api.serializers import (RecipeChangeSerializer,
                              RecipeGetSerializer,
                              DownloadShoppingCartSerializer,
-                             ShoppingCartSerializer)
-from api.views.recipe_favorite import RecipeFavoriteMixin
-from recipes.models import Recipe, ShoppingCart
-from api.utils import object_delete, object_update
+                             ShoppingCartSerializer,
+                             RecipeFavoriteSerializer)
+from recipes.models import Recipe, ShoppingCart, RecipeFavorite
+from core.mixins import ObjectCRUDMixin
 
 
 class RecipeViewSet(viewsets.ModelViewSet,
-                    RecipeFavoriteMixin):
+                    ObjectCRUDMixin):
     """Вьюсет для рецептов и связных с /recipes/ действий."""
 
     queryset = Recipe.objects.all()
@@ -34,6 +36,33 @@ class RecipeViewSet(viewsets.ModelViewSet,
     ordering = ['-id']
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
     search_fields = ['title', 'tag']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if user.is_authenticated:
+            queryset = queryset.annotate(
+                is_favorited=Exists(
+                    RecipeFavorite.objects.filter(
+                        author=user,
+                        recipe=OuterRef('pk')
+                    )
+                ),
+                is_in_shopping_cart=Exists(
+                    ShoppingCart.objects.filter(
+                        author=user,
+                        recipe=OuterRef('pk')
+                    )
+                )
+            )
+        else:
+            queryset = queryset.annotate(
+                is_favorited=Value(False, output_field=BooleanField()),
+                is_in_shopping_cart=Value(False, output_field=BooleanField())
+            )
+
+        return queryset
 
     def get_permissions(self):
         if self.action == 'download_shopping_cart':
@@ -74,20 +103,66 @@ class RecipeViewSet(viewsets.ModelViewSet,
             'recipe': get_object_or_404(Recipe, id=pk)
         }
 
-    @action(detail=True, methods=['POST'], url_path='shopping_cart')
-    def post_shopping_cart(self, request: Request, pk: int):
+    @action(detail=True, methods=['POST'], url_path='favorite')
+    def post_favorite(self, request: Request, pk: int):
         data: dict = self.get_data(request=request, pk=pk)
-        serializer = ShoppingCartSerializer(
+        serializer = RecipeFavoriteSerializer(
             data={key: obj.id for key, obj in data.items()},
             context={'request': request}
         )
-        return object_update(serializer=serializer)
+        return self.object_update(serializer=serializer)
+
+    @post_favorite.mapping.delete
+    def delete_favorite(self, request: Request, pk: int):
+        return self.object_delete(
+            data=self.get_data(request=request, pk=pk),
+            error_message='У вас нет данного рецепта в избранном.',
+            model=RecipeFavorite
+        )
+
+    def get_favorite_data(self, request: Request, pk: int) -> dict:
+        """Общая часть для получения данных favorite."""
+        return {
+            'author': request.user,
+            'recipe': get_object_or_404(Recipe, id=pk)
+        }
+
+    @action(detail=True, methods=['POST'], url_path='favorite')
+    def post_favorite(self, request: Request, pk: int):
+        data = self.get_favorite_data(request, pk)
+        serializer = RecipeFavoriteSerializer(
+            data={key: obj.id for key, obj in data.items()},
+            context={'request': request}
+        )
+        return self.object_update(serializer=serializer)
+
+    @post_favorite.mapping.delete
+    def delete_favorite(self, request: Request, pk: int):
+        return self.object_delete(
+            data=self.get_favorite_data(request, pk),
+            error_message='У вас нет данного рецепта в избранном.',
+            model=RecipeFavorite
+        )
+
+    def get_serializer_class(self):
+        if self.action == "post_shopping_cart":
+            return ShoppingCartSerializer
+        return super().get_serializer_class()
+
+    @action(detail=True, methods=['POST'], url_path='shopping_cart')
+    def post_shopping_cart(self, request: Request, pk: int) -> Response:
+        data: dict = self.get_data(request=request, pk=pk)
+        serializer = self.get_serializer(
+            data={key: obj.id for key, obj in data.items()},
+            context={'request': request}
+        )
+        return self.object_update(serializer=serializer)
 
     @post_shopping_cart.mapping.delete
     def delete_shopping_cart(self, request: Request, pk: int):
-        return object_delete(
+        return self.object_delete(
             data=self.get_data(request=request, pk=pk),
-            error_mesage='У вас нет данного рецепта в корзине.',
+            error_message='У вас нет данного рецепта в корзине.',
             model=ShoppingCart
         )
 
@@ -101,7 +176,6 @@ class RecipeViewSet(viewsets.ModelViewSet,
         now = datetime.now()
         formatted_time = now.strftime('%d-%m-%Y_%H_%M_%S')
 
-        # Используем UTF-8 с BOM для правильного отображения в Excel
         response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
         filename = f'shopping_cart_{request.user.id}_{formatted_time}.csv'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
