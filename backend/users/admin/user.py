@@ -26,14 +26,15 @@ class UserAdminForm(forms.ModelForm):
             self.fields['password'].widget = forms.TextInput(
                 attrs={'class': 'vTextField'}
             )
-            self.fields['password'].help_text = "Введите пароль в открытом виде"
+            self.fields['password'].help_text = "Введите новый пароль"
             del self.fields['new_password']
         elif 'password' in self.fields:
             del self.fields['password']
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        if 'new_password' in self.cleaned_data and self.cleaned_data['new_password']:
+        if ('new_password' in self.cleaned_data
+                and self.cleaned_data['new_password']):
             user.set_password(self.cleaned_data['new_password'])
         elif not user.pk:  # Для нового пользователя
             user.set_password(self.cleaned_data['password'])
@@ -72,7 +73,8 @@ class UserAdmin(BaseUserAdmin):
         if obj:  # Редактирование
             fieldsets = [
                 ('Персональные данные', {
-                    'fields': ('username', 'email', 'first_name', 'last_name', 'new_password')
+                    'fields': ('username', 'email', 'first_name',
+                               'last_name', 'new_password')
                 }),
                 ('Признаки', {
                     'fields': ('is_active', 'is_staff', 'is_superuser')
@@ -84,7 +86,8 @@ class UserAdmin(BaseUserAdmin):
         else:  # Создание
             fieldsets = [
                 ('Персональные данные', {
-                    'fields': ('username', 'email', 'first_name', 'last_name', 'password')
+                    'fields': ('username', 'email', 'first_name',
+                               'last_name', 'password')
                 }),
                 ('Признаки', {
                     'fields': ('is_active', 'is_staff', 'is_superuser')
