@@ -23,5 +23,10 @@ class DownloadShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('ingredients',)
 
     def get_ingredients(self, obj: ShoppingCart):
-        author = self.context.get('request').user
+        request = self.context.get('request')
+        if request is None:
+            raise serializers.ValidationError(
+                'Невозможно получить список ингридиентов.'
+            )
+        author = request.user
         return RecipeIngredients.shopping_list.get_queryset(author)

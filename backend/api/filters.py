@@ -1,19 +1,20 @@
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 from django_filters import rest_framework as filters
-from recipes.models import Ingredient, Recipe, Tag
+from rest_framework.filters import SearchFilter
+
+from recipes.models import Recipe, Tag
 
 User = get_user_model()
 
 
-class IngredientFilter(filters.FilterSet):
-    """Фильтр по названию ингредиентов."""
+class IngredientFilter(SearchFilter):
+    """Фильтр для полнотекстового поиска ингредиентов."""
+    search_param = 'name'
+    search_title = 'Название'
 
-    name = filters.CharFilter(lookup_expr='istartswith')
-
-    class Meta:
-        model = Ingredient
-        fields = ['name']
+    def get_search_fields(self, view, request):
+        return ['^name']
 
 
 class RecipeFilter(filters.FilterSet):

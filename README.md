@@ -63,6 +63,10 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 sudo docker compose -f docker-compose.production.yml down
 ```
 
+## Проект доступен по адресу
+
+https://ilyushkins-foodgram.zapto.org/recipes
+
 ## Автор
 
 Гильманов Илья

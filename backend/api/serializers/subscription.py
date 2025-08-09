@@ -24,14 +24,19 @@ class SubscriptionGetSerializer(UserSerializer):
         read_only_fields = fields
 
     def get_recipes(self, obj: User):
-        request = self.context.get('request')
+        if 'request' not in self.context:
+            raise serializers.ValidationError(
+                {"error": "Отсутствует request в контексте сериализатора."},
+                code="missing_request_context"
+            )
 
+        request = self.context['request']
         recipes_limit = None
-        if request is not None:
-            try:
-                recipes_limit = int(request.GET.get('recipes_limit', ''))
-            except (ValueError, TypeError):
-                recipes_limit = settings.RECIPES_LIMIT_MAX
+
+        try:
+            recipes_limit = int(request.GET.get('recipes_limit', ''))
+        except (ValueError, TypeError):
+            recipes_limit = settings.RECIPES_LIMIT_MAX
 
         queryset = obj.recipes.all()
         if recipes_limit is not None:
@@ -61,5 +66,5 @@ class SubscriptionChangedSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return SubscriptionGetSerializer(
             instance.author_recipe,
-            context={'request': self.context.get('request')}
+            context=self.context
         ).data

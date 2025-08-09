@@ -1,9 +1,10 @@
 from djoser import views as djoser_views
-from rest_framework import response, status
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
+from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
 from api.permissions import ReadOnly
@@ -14,8 +15,7 @@ from users.models import User, Subscription
 from core.mixins import ObjectCRUDMixin
 
 
-class UserViewSet(djoser_views.UserViewSet,
-                  ObjectCRUDMixin,):
+class UserViewSet(djoser_views.UserViewSet, ObjectCRUDMixin):
     """Вьюсет пользователей."""
 
     queryset = User.objects.all()
@@ -24,11 +24,16 @@ class UserViewSet(djoser_views.UserViewSet,
     pagination_class.page_size_query_param = 'limit'
     permission_classes = [IsAuthenticated | ReadOnly]
 
-    @action(
-        ['GET'],
-        detail=False,
-        permission_classes=[IsAuthenticated]
-    )
+    def get_serializer_class(self):
+        if self.action == 'subscriptions':
+            return SubscriptionGetSerializer
+        elif self.action in ['post_subscribe', 'delete_subscribe']:
+            return SubscriptionChangedSerializer
+        elif self.action == 'avatar':
+            return AvatarSerializer
+        return super().get_serializer_class()
+
+    @action(['GET'], detail=False)
     def me(self, request, *args, **kwargs):
         return super().me(request, *args, **kwargs)
 
@@ -40,15 +45,9 @@ class UserViewSet(djoser_views.UserViewSet,
 
     @action(['GET'], detail=False, url_path='subscriptions')
     def subscriptions(self, request: Request):
-        user = request.user
-        queryset = User.objects.filter(authors__user=user)
-        pages = self.paginate_queryset(queryset)
-
-        serializer = SubscriptionGetSerializer(
-            pages,
-            many=True,
-            context={'request': request}
-        )
+        queryset = User.objects.filter(authors__user=request.user)
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
     @action(
@@ -58,17 +57,14 @@ class UserViewSet(djoser_views.UserViewSet,
         permission_classes=[IsAuthenticated]
     )
     def post_subscribe(self, request: Request, id: int):
-        data: dict = self.get_data(request=request, id=id)
-        serializer = SubscriptionChangedSerializer(
-            data={key: obj.id for key, obj in data.items()},
-            context={'request': request}
-        )
+        data = {key: obj.id for key, obj in self.get_data(request, id).items()}
+        serializer = self.get_serializer(data=data)
         return self.object_update(serializer=serializer)
 
     @post_subscribe.mapping.delete
     def delete_subscribe(self, request: Request, id: int):
         return self.object_delete(
-            data=self.get_data(request=request, id=id),
+            data=self.get_data(request, id),
             error_message='У вас нет данного пользователя в подписчиках.',
             model=Subscription
         )
@@ -77,35 +73,33 @@ class UserViewSet(djoser_views.UserViewSet,
         ['PUT'],
         detail=False,
         url_path='me/avatar',
-        name='set_avatar',
         permission_classes=[IsAuthenticated]
     )
     def avatar(self, request: Request, *args, **kwargs):
         if 'avatar' not in request.data:
-            return response.Response(
+            return Response(
                 {'avatar': 'Отсутствует изображение'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = AvatarSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        avatar_data = serializer.validated_data.get('avatar')
-        request.user.avatar = avatar_data
+        request.user.avatar = serializer.validated_data['avatar']
         request.user.save()
 
         image_url = request.build_absolute_uri(
-            f'/media/users/{avatar_data.name}'
+            f'/media/users/{request.user.avatar.name}'
         )
-        return response.Response(
-            {'avatar': str(image_url)}, status=status.HTTP_201_CREATED
+        return Response(
+            {'avatar': image_url},
+            status=status.HTTP_201_CREATED
         )
 
     @avatar.mapping.delete
     def delete_avatar(self, request: Request, *args, **kwargs):
-        user = self.request.user
-        if user.avatar:
-            user.avatar.delete()
-            user.avatar = None
-            user.save()
-        return response.Response(status=status.HTTP_204_NO_CONTENT)
+        if request.user.avatar:
+            request.user.avatar.delete()
+            request.user.avatar = None
+            request.user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)

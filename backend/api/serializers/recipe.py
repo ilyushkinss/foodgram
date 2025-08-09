@@ -1,23 +1,16 @@
-from typing import Optional
-
-from django.db.models import Model
 from rest_framework import serializers
-from rest_framework.request import Request
 
 from api.serializers.base_serializers import BaseRecipeSerializer
 from api.serializers.recipe_ingredients import (
     RecipeIngredientsGetSerializer,
-    RecipeIngredientsSetSerializer
+    RecipeIngredientsSetSerializer,
 )
 from api.serializers.tag import TagSerializer
 from api.serializers.user import UserSerializer
 from core.constants import MAX_INTEGER_VALUE, MIN_INTEGER_VALUE
 from recipes.models import (
-    Recipe,
-    RecipeFavorite,
     RecipeIngredients,
-    ShoppingCart,
-    Tag
+    Tag,
 )
 
 
@@ -50,20 +43,6 @@ class RecipeGetSerializer(RecipeSerializer):
             'is_favorited', 'is_in_shopping_cart'
         )
         read_only_fields = fields
-
-    def get_is_exists(self, obj: Recipe, model: Model):
-        request: Optional[Request] = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        return model.objects.filter(
-            author=request.user, recipe=obj
-        ).exists()
-
-    def get_is_favorited(self, obj: Recipe):
-        return self.get_is_exists(obj, RecipeFavorite)
-
-    def get_is_in_shopping_cart(self, obj: Recipe):
-        return self.get_is_exists(obj, ShoppingCart)
 
 
 class RecipeChangeSerializer(RecipeSerializer):
@@ -113,6 +92,11 @@ class RecipeChangeSerializer(RecipeSerializer):
         if not tags:
             raise serializers.ValidationError(
                 'Необходимо указать хотя бы один тег.'
+            )
+        unique_tags = set(tags)
+        if len(unique_tags) != len(tags):
+            raise serializers.ValidationError(
+                'Теги не должны повторяться'
             )
         return tags
 

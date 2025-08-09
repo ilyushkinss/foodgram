@@ -17,6 +17,9 @@ class UserSerializer(CurrentUserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     def get_is_subscribed(self, obj):
+        if 'request' not in self.context:
+            raise KeyError('Отсутствует ключ request.')
+
         request = self.context['request']
         return (request and request.user.is_authenticated
                 and obj.authors.filter(user=request.user).exists())

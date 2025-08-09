@@ -2,7 +2,7 @@ import csv
 from datetime import datetime
 
 from django.shortcuts import get_object_or_404, redirect
-from django.db.models import Exists, OuterRef, Value, BooleanField
+from django.db.models import Exists, OuterRef
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -55,11 +55,6 @@ class RecipeViewSet(viewsets.ModelViewSet,
                     )
                 )
             )
-        else:
-            queryset = queryset.annotate(
-                is_favorited=Value(False, output_field=BooleanField()),
-                is_in_shopping_cart=Value(False, output_field=BooleanField())
-            )
 
         return queryset
 
@@ -73,14 +68,7 @@ class RecipeViewSet(viewsets.ModelViewSet,
 
     @action(detail=True, methods=['GET'], url_path='get-link')
     def get_short_link(self, request: Request, pk: int):
-        try:
-            recipe: Recipe = self.get_object()
-        except Recipe.DoesNotExist:
-            return Response(
-                {'message': 'Не существует такой записи'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
+        recipe: Recipe = self.get_object()
         scheme = request.scheme
         host = request.get_host()
         domain = f'{scheme}://{host}'
@@ -95,41 +83,38 @@ class RecipeViewSet(viewsets.ModelViewSet,
             'recipe': get_object_or_404(Recipe, id=pk)
         }
 
-    def get_favorite_data(self, request: Request, pk: int) -> dict:
-        """Общая часть для получения данных favorite."""
-        return {
-            'author': request.user,
-            'recipe': get_object_or_404(Recipe, id=pk)
-        }
-
     @action(detail=True, methods=['POST'], url_path='favorite')
     def post_favorite(self, request: Request, pk: int):
-        data = self.get_favorite_data(request, pk)
-        serializer = RecipeFavoriteSerializer(
-            data={key: obj.id for key, obj in data.items()},
-            context={'request': request}
+        data = self.get_data(request, pk)
+        serializer = self.get_serializer(
+            data={key: obj.id for key, obj in data.items()}
         )
         return self.object_update(serializer=serializer)
 
     @post_favorite.mapping.delete
     def delete_favorite(self, request: Request, pk: int):
         return self.object_delete(
-            data=self.get_favorite_data(request, pk),
+            data=self.get_data(request, pk),
             error_message='У вас нет данного рецепта в избранном.',
             model=RecipeFavorite
         )
 
     def get_serializer_class(self):
-        if self.action == "post_shopping_cart":
+        if self.action == "create":
+            return RecipeChangeSerializer
+        elif self.action == "post_shopping_cart":
             return ShoppingCartSerializer
+        elif self.action == "post_favorite":
+            return RecipeFavoriteSerializer
+        elif self.action == "download_shopping_cart":
+            return DownloadShoppingCartSerializer
         return super().get_serializer_class()
 
     @action(detail=True, methods=['POST'], url_path='shopping_cart')
     def post_shopping_cart(self, request: Request, pk: int) -> Response:
         data: dict = self.get_data(request=request, pk=pk)
         serializer = self.get_serializer(
-            data={key: obj.id for key, obj in data.items()},
-            context={'request': request}
+            data={key: obj.id for key, obj in data.items()}
         )
         return self.object_update(serializer=serializer)
 
@@ -143,7 +128,7 @@ class RecipeViewSet(viewsets.ModelViewSet,
 
     @action(detail=False, methods=['GET'], url_path='download_shopping_cart')
     def download_shopping_cart(self, request):
-        serializer = DownloadShoppingCartSerializer(
+        serializer = self.get_serializer(
             instance=ShoppingCart.objects.all(),
             many=True, context={'request': request}
         )
