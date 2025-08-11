@@ -44,16 +44,14 @@ class SubscriptionAdmin(admin.ModelAdmin):
         return super(SubscriptionAdmin, self).change_view(request, object_id)
 
     def get_author_recipe(self, obj: Subscription) -> str:
-        # Создаем ссылку на редактирование автора рецепта
         url = reverse('admin:users_user_change', args=[obj.author_recipe.id])
         return format_html(
-            '<a href="{}">{}</a>', url, obj.author_recipe.username
+            '<a href="{}">{}</a>', url, obj.author_recipe.__str__()
         )
 
     def get_user(self, obj: Subscription) -> str:
-        # Создаем ссылку на редактирование подписчика
         url = reverse('admin:users_user_change', args=[obj.user.id])
-        return format_html('<a href="{}">{}</a>', url, obj.user.username)
+        return format_html('<a href="{}">{}</a>', url, obj.user.__str__())
 
     get_author_recipe.short_description = 'Автор рецепта'
     get_user.short_description = 'Подписчик'

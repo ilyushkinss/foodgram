@@ -66,5 +66,5 @@ class SubscriptionChangedSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return SubscriptionGetSerializer(
             instance.author_recipe,
-            context=self.context
+            context=self.context,
         ).data

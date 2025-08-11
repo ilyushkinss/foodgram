@@ -85,6 +85,13 @@ class UserViewSet(djoser_views.UserViewSet, ObjectCRUDMixin):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        if request.user.avatar:
+            old_avatar = request.user.avatar
+            request.user.avatar = None
+            request.user.save()
+            old_avatar.delete()
+
+        # Сохраняем новый аватар
         request.user.avatar = serializer.validated_data['avatar']
         request.user.save()
 
