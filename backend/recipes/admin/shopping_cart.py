@@ -20,7 +20,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
         return format_html(
             '<a href="{}">{}</a>', url, obj.author.__str__()
         )
-    get_author.short_description = 'пользователь'  # Переименовываем поле
+    get_author.short_description = 'Пользователь'  # Переименовываем поле
 
     def get_recipe(self, obj):
         url = reverse('admin:recipes_recipe_change', args=[obj.recipe.id])
