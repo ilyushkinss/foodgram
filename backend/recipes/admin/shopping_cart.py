@@ -10,8 +10,10 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'get_author', 'get_recipe')
     list_filter = ('author',)
-    search_fields = ('recipe__name', 'author__username',
-                    'author__first_name', 'author__last_name')
+    search_fields = (
+        'recipe__name', 'author__username',
+        'author__first_name', 'author__last_name'
+    )
     list_display_links = ('id',)
     empty_value_display = '-пусто-'
 
