@@ -75,6 +75,7 @@ class UserViewSet(djoser_views.UserViewSet, ObjectCRUDMixin):
         url_path='me/avatar',
         permission_classes=[IsAuthenticated]
     )
+
     def avatar(self, request: Request, *args, **kwargs):
         if 'avatar' not in request.data:
             return Response(
@@ -85,19 +86,11 @@ class UserViewSet(djoser_views.UserViewSet, ObjectCRUDMixin):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        if request.user.avatar:
-            old_avatar = request.user.avatar
-            request.user.avatar = None
-            request.user.save()
-            old_avatar.delete()
-
-        # Сохраняем новый аватар
         request.user.avatar = serializer.validated_data['avatar']
         request.user.save()
 
-        image_url = request.build_absolute_uri(
-            f'/media/users/{request.user.avatar.name}'
-        )
+        image_url = request.build_absolute_uri(request.user.avatar.url)
+
         return Response(
             {'avatar': image_url},
             status=status.HTTP_201_CREATED

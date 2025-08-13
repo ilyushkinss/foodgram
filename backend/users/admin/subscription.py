@@ -14,7 +14,9 @@ class SubscriptionAdmin(admin.ModelAdmin):
     """Страничка управления подписчиками в админке."""
 
     list_display = ('id', 'get_author_recipe', 'get_user', 'created_at')
-    search_fields = ('author_recipe__username', 'user__username')
+    search_fields = ('author_recipe__username', 'author_recipe__first_name',
+                     'author_recipe__last_name', 'user__username',
+                     'user__first_name', 'user__last_name')
     autocomplete_fields = ('author_recipe', 'user')
     ordering = ('id', )
     readonly_fields = ('created_at', )
