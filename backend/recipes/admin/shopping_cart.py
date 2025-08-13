@@ -29,4 +29,4 @@ class ShoppingCartAdmin(admin.ModelAdmin):
         return format_html(
             '<a href="{}">{}</a>', url, obj.recipe.__str__()
         )
-    get_recipe.short_description = 'рецепт'
+    get_recipe.short_description = 'Рецепт'
