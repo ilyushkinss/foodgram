@@ -75,7 +75,6 @@ class UserViewSet(djoser_views.UserViewSet, ObjectCRUDMixin):
         url_path='me/avatar',
         permission_classes=[IsAuthenticated]
     )
-
     def avatar(self, request: Request, *args, **kwargs):
         if 'avatar' not in request.data:
             return Response(
